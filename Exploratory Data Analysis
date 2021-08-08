@@ -1,0 +1,247 @@
+-- Car insurance dataset exploratory data analysis
+
+ SELECT * 
+ FROM vehicles..Car_Insurance_Data$; 
+ 
+ SELECT COUNT(*)
+ FROM vehicles..Car_Insurance_Data$; -- 10,000 rows of data 
+
+ -- Outcome (claims made)
+ SELECT OUTCOME 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE OUTCOME IS NULL;
+
+ SELECT OUTCOME, COUNT(OUTCOME) AS Count_Outcome
+FROM vehicles..Car_Insurance_Data$
+GROUP BY OUTCOME;  -- 69% of sample has not made insurance claims
+
+ -- Age 
+SELECT AGE
+FROM vehicles..Car_Insurance_Data$
+WHERE AGE IS NULL; -- No null values 
+
+DROP TABLE Sum
+CREATE TABLE Sum (
+	num_people int,
+	Age_Group varchar(255));
+
+INSERT INTO Sum(num_people, Age_Group)
+VALUES 
+	(10000,'16-25'),
+	(10000,'26-39'),
+	(10000,'40-64'),
+	(10000,'65');
+
+WITH Age (Age_Group, Group_Count)
+AS
+(
+SELECT AGE, COUNT(age) 
+FROM vehicles..Car_Insurance_Data$ 
+GROUP BY AGE
+ )
+
+SELECT Age.Age_Group,Group_Count,num_people, ROUND((CAST(Group_Count AS decimal)/(num_people)), 3) AS 'Percent'
+FROM Age
+INNER JOIN
+Sum ON
+Age.Age_Group = Sum.Age_Group; -- 26-39 year olds are ~31% of customers (largest share), 65+ ~20% of customers (smallest share)
+----------------------------
+SELECT SUM(OUTCOME)
+FROM vehicles..Car_Insurance_Data$; -- 3,133 
+
+DROP TABLE Sum
+CREATE TABLE Sum (
+	Total_Claims int,
+	Age_Group varchar(255));
+INSERT INTO Sum (Total_Claims,Age_Group)
+VALUES  (3133,'16-25'),
+		(3133,'26-39'),
+		(3133,'40-64'),
+		(3133,'65');
+
+SELECT ins.AGE AS Age_Group,SUM(ins.OUTCOME) AS Claims_Per_Age,Sum.Total_Claims, (SUM(ins.OUTCOME))/(Sum.Total_Claims) AS Percent_Total
+FROM vehicles..Car_Insurance_Data$ ins 
+JOIN 
+Sum ON
+ins.AGE = Sum.Age_Group
+GROUP BY ins.AGE,Sum.Total_Claims; -- Age group 16-25 have the most claims (46%) least is 65+ (6.3%)
+
+ -- Gender
+ SELECT GENDER 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE GENDER IS NULL; -- none
+
+ SELECT GENDER, COUNT(GENDER)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY GENDER; -- almost 50/50
+
+ -- Postal Code
+
+ SELECT POSTAL_CODE
+ FROM vehicles..Car_Insurance_Data$
+ WHERE POSTAL_CODE IS NULL;
+
+ SELECT DISTINCT(POSTAL_CODE), COUNT(POSTAL_CODE)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY POSTAL_CODE;
+
+ -- Driving Experience
+ SELECT DRIVING_EXPERIENCE
+ FROM vehicles..Car_Insurance_Data$
+ WHERE DRIVING_EXPERIENCE IS NULL; -- none
+
+ SELECT DRIVING_EXPERIENCE,COUNT(DRIVING_EXPERIENCE), (CAST(COUNT(DRIVING_EXPERIENCE) AS dec))/(10000)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY DRIVING_EXPERIENCE; -- ~68% of sample has 0-19 years of driving experience 
+
+ SELECT AGE, DRIVING_EXPERIENCE,COUNT(DRIVING_EXPERIENCE)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY AGE,DRIVING_EXPERIENCE
+ ORDER BY AGE; -- driving experience by age
+  
+ -- Education 
+ SELECT EDUCATION 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE EDUCATION IS NULL; -- no null values
+
+ SELECT DISTINCT(EDUCATION)
+ FROM vehicles..Car_Insurance_Data$; -- high school, none, university 
+
+ SELECT DISTINCT(EDUCATION), COUNT(EDUCATION)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY EDUCATION; -- most of sample has high school education, smallest fraction is none 
+
+ -- Income 
+ SELECT INCOME
+ FROM vehicles..Car_Insurance_Data$
+ WHERE INCOME IS NULL; -- no null values 
+
+ SELECT DISTINCT(INCOME)
+ FROM vehicles..Car_Insurance_Data$; -- working class, upper class, poverty, middle class
+
+ SELECT INCOME, COUNT(INCOME)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY INCOME; -- most of sample is upper class, smallest fraction is working class 
+
+ -- Credit Score 
+ SELECT COUNT(1)-COUNT(CREDIT_SCORE)
+ FROM vehicles..Car_Insurance_Data$; -- 982 null values in credit score 
+
+SELECT AVG(CREDIT_SCORE)
+FROM vehicles..Car_Insurance_Data$; --  0.515812809602794
+
+UPDATE vehicles..Car_Insurance_Data$
+SET CREDIT_SCORE= 0.515812809602794
+WHERE CREDIT_SCORE IS NULL; -- replace null credit score values with mean value of credit score
+
+SELECT CREDIT_SCORE
+FROM vehicles..Car_Insurance_Data$;
+
+ -- Vehicle Ownership 
+ 
+ SELECT VEHICLE_OWNERSHIP
+ FROM vehicles..Car_Insurance_Data$
+ WHERE VEHICLE_OWNERSHIP IS NULL; -- none
+
+ SELECT VEHICLE_OWNERSHIP, COUNT(VEHICLE_OWNERSHIP)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY VEHICLE_OWNERSHIP; -- ~70% of sample owns car 
+
+ -- Vehicle Year 
+
+ SELECT VEHICLE_YEAR
+ FROM vehicles..Car_Insurance_Data$
+ WHERE VEHICLE_YEAR IS NULL; -- no null values 
+
+ SELECT DISTINCT(VEHICLE_YEAR), COUNT(VEHICLE_YEAR)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY VEHICLE_YEAR; -- before and after 2015; ~70% of cars in sample are from before 2015
+
+ -- Married 
+
+ SELECT MARRIED 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE MARRIED IS NULL;
+
+SELECT MARRIED, COUNT(MARRIED)
+FROM vehicles..Car_Insurance_Data$
+GROUP BY MARRIED; -- almost 50/50 split between married and non married 
+
+ -- Children 
+ 
+ SELECT CHILDREN 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE CHILDREN IS NULL; -- none
+
+ SELECT CHILDREN, COUNT(CHILDREN)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY CHILDREN; -- ~ 68% of sample has children 
+
+ -- Mileage 
+
+ SELECT ANNUAL_MILEAGE 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE ANNUAL_MILEAGE IS NULL;
+
+ SELECT COUNT(1)-COUNT(ANNUAL_MILEAGE)
+ FROM vehicles..Car_Insurance_Data$
+ WHERE ANNUAL_MILEAGE IS NULL; -- 957 null values 
+
+ SELECT AVG(ANNUAL_MILEAGE)
+ FROM vehicles..Car_Insurance_Data$; -- 11697.0032069004
+
+UPDATE vehicles..Car_Insurance_Data$
+SET ANNUAL_MILEAGE= 11697.0032069004
+WHERE ANNUAL_MILEAGE IS NULL; -- 957 rows affected 
+
+SELECT DISTINCT(ANNUAL_MILEAGE), COUNT(ANNUAL_MILEAGE)
+FROM vehicles..Car_Insurance_Data$
+GROUP BY ANNUAL_MILEAGE
+ORDER BY ANNUAL_MILEAGE DESC; 
+
+ -- Vehicle Type 
+
+ SELECT VEHICLE_TYPE
+ FROM vehicles..Car_Insurance_Data$
+ WHERE VEHICLE_TYPE IS NULL;
+
+ SELECT VEHICLE_TYPE, COUNT(VEHICLE_TYPE)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY VEHICLE_TYPE; -- 95% of sample have sedan 
+
+ -- Speeding Violations 
+
+ SELECT SPEEDING_VIOLATIONS 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE SPEEDING_VIOLATIONS IS NULL; 
+
+ SELECT DISTINCT(SPEEDING_VIOLATIONS), COUNT(SPEEDING_VIOLATIONS)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY SPEEDING_VIOLATIONS
+ ORDER BY SPEEDING_VIOLATIONS;
+
+ -- DUI's
+
+ SELECT DUIS 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE DUIS IS NULL;
+
+ SELECT DUIS, COUNT(DUIS)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY DUIS
+ ORDER BY DUIS; -- 81% have no DUI's
+
+ -- Past Accidents 
+
+ SELECT PAST_ACCIDENTS
+ FROM vehicles..Car_Insurance_Data$
+ WHERE PAST_ACCIDENTS IS NULL;
+
+ SELECT COUNT(PAST_ACCIDENTS)
+ FROM vehicles..Car_Insurance_Data$
+ WHERE PAST_ACCIDENTS != 0 -- 4416 total past accidents ~ 44% of individuals 
+
+ SELECT PAST_ACCIDENTS, COUNT(PAST_ACCIDENTS) AS count_per_group
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY PAST_ACCIDENTS
+ ORDER BY PAST_ACCIDENTS; -- 56% of sample has no past accidents 
