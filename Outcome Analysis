@@ -1,0 +1,297 @@
+-- Insurance Outcome Analysis
+-- Goal: Identify customers in each category that are more likely to make an insurance claim to more accuratley price premiums 
+
+-- Zip Code (joining tables)
+CREATE TABLE zip_claim (
+	Zip_Code int,
+	Made_Claim int)
+INSERT INTO zip_claim 
+SELECT POSTAL_CODE, COUNT(POSTAL_CODE)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 1
+GROUP BY POSTAL_CODE -- number of customers that made claim by zip code
+
+CREATE TABLE zip_nc (
+	Zip_Code int,
+	No_Claim int)
+INSERT INTO zip_nc
+SELECT POSTAL_CODE, COUNT(POSTAL_CODE)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 0
+GROUP BY POSTAL_CODE -- number of customers that did not make claim by zip code 
+
+SELECT zc.Zip_Code, Made_Claim, COALESCE(No_Claim,0) AS No_Claim
+FROM zip_claim zc
+LEFT JOIN zip_nc 
+ON
+zc.Zip_Code = zip_nc.Zip_Code
+ORDER BY Made_Claim DESC -- final zipcode-outcome table
+------------------------------------------------------------
+-- Past Accidents 
+DROP TABLE Past_Accidents
+CREATE TABLE Past_Accidents (
+	Past_Accidents int,
+	Count_Per_Group int); -- total count by number of past accidents
+INSERT INTO Past_Accidents
+ SELECT PAST_ACCIDENTS, COUNT(PAST_ACCIDENTS)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY PAST_ACCIDENTS;
+
+ WITH past_accidents_claim (Past_Accidents,made_claim) 
+ AS 
+ (
+  SELECT PAST_ACCIDENTS, COUNT(PAST_ACCIDENTS) 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE OUTCOME = 1
+ GROUP BY PAST_ACCIDENTS
+ ) -- number that made claim by number of past accidents 
+
+SELECT pa.Past_Accidents, Count_Per_Group, COALESCE (made_claim,0) AS made_claim, COALESCE((CAST(made_claim AS decimal)/(Count_Per_Group)) *100,0) AS 'Percent' 
+FROM Past_Accidents pa
+LEFT JOIN 
+past_accidents_claim pac ON 
+pa.Past_Accidents = pac.Past_Accidents
+ORDER BY pa.Past_Accidents -- table for past accidents vs outcome (finsih on excel)
+------------------------------------------------------------------------------------------
+-- Vehicle Year 
+
+SELECT VEHICLE_YEAR, COUNT(VEHICLE_YEAR)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME =1 
+GROUP BY VEHICLE_YEAR
+UNION
+SELECT VEHICLE_YEAR,COUNT(VEHICLE_YEAR)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 0
+GROUP BY VEHICLE_YEAR
+
+--------------------------------------------------------
+--- Vehicle Type 
+
+SELECT VEHICLE_TYPE, COUNT(VEHICLE_TYPE) 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE OUTCOME = 1 
+ GROUP BY VEHICLE_TYPE
+ UNION
+ SELECT VEHICLE_TYPE, COUNT(VEHICLE_TYPE) 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE OUTCOME = 0
+ GROUP BY VEHICLE_TYPE
+
+ -----------------------------------------------
+ -- Ownership 
+ SELECT VEHICLE_TYPE, COUNT(VEHICLE_TYPE) 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE OUTCOME = 1 
+ GROUP BY VEHICLE_TYPE
+ UNION
+ SELECT VEHICLE_TYPE, COUNT(VEHICLE_TYPE) 
+ FROM vehicles..Car_Insurance_Data$
+ WHERE OUTCOME = 0
+ GROUP BY VEHICLE_TYPE
+ -------------------------------
+ -- Vehicle Ownership 
+SELECT VEHICLE_OWNERSHIP, COUNT(VEHICLE_OWNERSHIP)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 1
+GROUP BY VEHICLE_OWNERSHIP
+UNION
+SELECT VEHICLE_OWNERSHIP, COUNT(VEHICLE_OWNERSHIP)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 0
+GROUP BY VEHICLE_OWNERSHIP
+--------------------------------- 
+-- Income  (temp table and join)
+CREATE TABLE Income_Claim (
+	Income varchar(255),
+	Made_Claim int)
+INSERT INTO Income_Claim
+SELECT INCOME,COUNT(INCOME)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 1
+GROUP BY INCOME -- number of customers that made claim by income level 
+
+CREATE TABLE Income_NC (
+	Income varchar(255),
+	No_Claim int)
+INSERT INTO Income_NC
+SELECT INCOME,COUNT(INCOME)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 0
+GROUP BY INCOME  -- number of customers that did not make claim by income level 
+
+SELECT inc.INCOME, ic.Made_Claim, inc.No_Claim 
+FROM Income_Claim ic
+JOIN Income_NC inc 
+ON 
+inc.Income = ic.Income
+ORDER BY Made_Claim DESC -- final income table 
+---------------------------------------------
+-- Experience 
+CREATE TABLE experience_claim (
+	Driving_Experience varchar(255),
+	Made_Claim int)
+INSERT INTO experience_claim
+SELECT DRIVING_EXPERIENCE, COUNT(DRIVING_EXPERIENCE)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 1
+GROUP BY DRIVING_EXPERIENCE -- number of customers that made claim by years of driving experience 
+
+CREATE TABLE experience_nc (
+	Driving_Experience varchar(255),
+	No_Claim int)
+INSERT INTO experience_nc
+SELECT DRIVING_EXPERIENCE, COUNT(DRIVING_EXPERIENCE)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 0
+GROUP BY DRIVING_EXPERIENCE -- number of customers that did not makeclaim by years of driving experience 
+
+SELECT ec.Driving_Experience, ec.Made_Claim, enc.No_Claim
+FROM experience_claim ec
+JOIN experience_nc enc
+ON 
+ec.Driving_Experience = enc.Driving_Experience
+ORDER BY Driving_Experience ASC -- final driving experience table 
+--------------------------------------------------------------
+-- Education 
+CREATE TABLE education_claim (
+	Education varchar(255),
+	Made_Claim int)
+INSERT INTO education_claim
+SELECT EDUCATION, COUNT(EDUCATION)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 1 
+GROUP BY EDUCATION -- number of customers that made claim by education 
+
+CREATE TABLE education_nc (
+	Education varchar(255),
+	No_Claim int)
+INSERT INTO education_nc
+SELECT EDUCATION, COUNT(EDUCATION)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 0
+GROUP BY EDUCATION -- number of customers that did not make claim by education 
+
+SELECT ec.Education, ec.Made_Claim, enc.No_Claim
+FROM education_claim ec
+JOIN education_nc enc
+ON 
+ec.Education = enc.Education
+ORDER BY No_Claim ASC -- final education table 
+---------------------------------------------------------
+-- Age 
+
+CREATE TABLE age_claim (
+	Age varchar(255),
+	Made_Claim int)
+INSERT INTO Age_Claim 
+SELECT AGE, COUNT(AGE)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 1
+GROUP BY AGE -- made claim by age 
+
+CREATE TABLE age_nc (
+	Age varchar(255),
+	No_Claim int)
+INSERT INTO age_nc
+SELECT AGE, COUNT(AGE)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 0
+GROUP BY AGE -- did not make claim by age 
+
+SELECT ac.AGE, ac.Made_Claim, anc.No_Claim
+FROM age_claim ac
+JOIN age_nc anc
+ON
+ac.Age = anc.Age
+ORDER BY AGE -- final age table 
+----------------------------------
+-- Children 
+
+SELECT CHILDREN AS 'Children', COUNT(CHILDREN) AS 'Outcome'
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 1
+GROUP BY CHILDREN
+UNION
+SELECT CHILDREN, COUNT(CHILDREN)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 0
+GROUP BY CHILDREN
+----------------------------------
+-- Married 
+
+SELECT MARRIED AS 'Marital Status', COUNT(MARRIED) 'Outcome'
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 1
+GROUP BY MARRIED
+UNION
+SELECT MARRIED, COUNT(MARRIED)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 0
+GROUP BY MARRIED
+-----------------------------------
+-- Speeding Violations 
+DROP TABLE speeding_outcome
+CREATE TABLE speeding_outcome (
+ Speeding_Violations int,
+ Count_Violations int)
+ INSERT INTO speeding_outcome
+ SELECT SPEEDING_VIOLATIONS, COUNT(SPEEDING_VIOLATIONS)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY SPEEDING_VIOLATIONS; -- count for total speeding violations 
+
+DROP TABLE speeding_nc
+CREATE TABLE speeding_nc (
+	Speeding_Violations int,
+	No_Claim int)
+INSERT INTO speeding_nc
+SELECT SPEEDING_VIOLATIONS, COUNT(SPEEDING_VIOLATIONS)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 0
+GROUP BY SPEEDING_VIOLATIONS; -- number that did not make claim by number of speeding violations 
+
+WITH speeding_claim (Speeding_Violations, speeding_made_claim)
+AS (
+SELECT SPEEDING_VIOLATIONS, COUNT(SPEEDING_VIOLATIONS)
+FROM vehicles..Car_Insurance_Data$
+WHERE OUTCOME = 1
+GROUP BY SPEEDING_VIOLATIONS) -- number that did make claim by number of speeding violations 
+ 
+SELECT so.Speeding_Violations, Count_Violations, COALESCE(speeding_made_claim,0) AS 'Made Claim', snc.No_Claim AS 'No Claim'
+FROM speeding_outcome so
+LEFT JOIN 
+speeding_claim sc ON
+so.Speeding_Violations = sc.Speeding_Violations
+INNER JOIN speeding_nc snc ON
+so.Speeding_Violations = snc.Speeding_Violations
+ORDER BY Speeding_Violations ASC -- final speeding table with total count for calculating what percent made claim in excel 
+----------------------------------------------------------------
+-- DUIs
+DROP TABLE DUIS
+CREATE TABLE DUIS (
+	Num_DUIS int,
+	Count_Group int)
+INSERT INTO DUIS
+ SELECT DUIS, COUNT(DUIS)
+ FROM vehicles..Car_Insurance_Data$
+ GROUP BY DUIS;
+
+ WITH DUIS_Claim (Num_DUIS, made_claim)
+ AS (
+ SELECT DUIS, COUNT(DUIS)
+ FROM vehicles..Car_Insurance_Data$
+ WHERE OUTCOME = 1 
+ GROUP BY DUIS
+ )
+
+ SELECT d.Num_DUIS, Count_Group, COALESCE (made_claim,0) AS made_claim, COALESCE((CAST(made_claim as decimal)/Count_Group*100),0)
+ FROM DUIS d
+ LEFT JOIN 
+ DUIS_Claim dc ON
+ d.Num_DUIS = dc.Num_DUIS
+ ORDER BY Num_DUIS -- table for duis vs outcome 
+-------------------------------------------------------------------------------------------------
+-- mileage 
+SELECT ANNUAL_MILEAGE,OUTCOME 
+FROM vehicles..Car_Insurance_Data$
+ORDER BY OUTCOME, ANNUAL_MILEAGE;
